@@ -43,7 +43,7 @@ A full-stack Todo List application with React frontend and Django backend.
 
 1. Navigate to the frontend directory:
    ```
-   cd frontend/todo-frontend
+   cd frontend
    ```
 
 2. Install dependencies:
