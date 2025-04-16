@@ -32,8 +32,8 @@ const Navigation = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="App">
           <Navigation />
           <Routes>
@@ -51,8 +51,8 @@ function App() {
             } />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
