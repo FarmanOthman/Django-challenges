@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -10,7 +10,6 @@ const Register = () => {
         password2: ''
     });
     const [error, setError] = useState('');
-    const { register } = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -30,11 +29,20 @@ const Register = () => {
         }
 
         try {
-            await register(formData);
+            await api.post('auth/register/', formData);
             navigate('/login');
         } catch (err) {
             console.error('Registration error:', err);
-            setError('Registration failed - Please check your details');
+            if (err.response?.data) {
+                // Handle specific validation errors
+                const errors = err.response.data;
+                if (errors.username) setError(`Username: ${errors.username[0]}`);
+                else if (errors.email) setError(`Email: ${errors.email[0]}`);
+                else if (errors.password) setError(`Password: ${errors.password[0]}`);
+                else setError('Registration failed - Please check your details');
+            } else {
+                setError('Registration failed - Please try again');
+            }
         }
     };
 
