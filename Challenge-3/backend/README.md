@@ -18,22 +18,27 @@ A RESTful API for a blog application built with Django and Django REST Framework
    pip install -r requirements.txt
    ```
 
-4. Set up PostgreSQL database:
-   - Create a database named `blog_db`
-   - Update database settings in `blog_project/settings.py` if needed
+4. Set up environment variables:
+   - Copy `.env.example` to `.env`
+   - Update the values in `.env` according to your setup
+   - Especially make sure to update `DB_PASSWORD` to your actual PostgreSQL password
 
-5. Run migrations:
+5. Set up PostgreSQL database:
+   - Create a database named `blog_db` (or as configured in your .env file)
+   - Update database settings in `.env` if needed
+
+6. Run migrations:
    ```
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-6. Create a superuser:
+7. Create a superuser:
    ```
    python manage.py createsuperuser
    ```
 
-7. Run the development server:
+8. Run the development server:
    ```
    python manage.py runserver
    ```

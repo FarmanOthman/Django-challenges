@@ -41,22 +41,26 @@ The project is divided into two main parts:
    pip install -r requirements.txt
    ```
 
-5. Set up PostgreSQL:
-   - Create a database called `blog_db`
-   - Update database settings in `blog_project/settings.py` if needed
+5. Set up environment variables:
+   - Copy `.env.example` to `.env`
+   - Update the values in `.env` according to your setup
+   - Make sure to update database credentials
 
-6. Run migrations:
+6. Set up PostgreSQL:
+   - Create a database that matches the name in your `.env` file (default: `blog_db`)
+
+7. Run migrations:
    ```
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-7. Create a superuser:
+8. Create a superuser:
    ```
    python manage.py createsuperuser
    ```
 
-8. Start the development server:
+9. Start the development server:
    ```
    python manage.py runserver
    ```
@@ -86,6 +90,16 @@ The project is divided into two main parts:
 - `/api/posts/`: List and create blog posts
 - `/api/comments/`: List and create comments
 - `/api/auth/`: Authentication endpoints
+
+## Environment Variables
+
+The backend uses environment variables for configuration. These are stored in the `.env` file.
+Key variables include:
+
+- `SECRET_KEY`: Django's secret key
+- `DEBUG`: Whether to run in debug mode (True/False)
+- `DB_NAME`, `DB_USER`, `DB_PASSWORD`: Database configuration
+- `CORS_ALLOWED_ORIGINS`: Allowed origins for CORS
 
 ## Technologies Used
 
