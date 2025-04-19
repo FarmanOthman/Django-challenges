@@ -8,6 +8,8 @@ const PostListPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredPosts, setFilteredPosts] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const postsPerPage = 9
   
   const { data: posts, isLoading: postsLoading, error: postsError } = useQuery('allPosts', getPosts)
   const { data: categories } = useQuery('categories', getCategories)
@@ -30,8 +32,18 @@ const PostListPage = () => {
       }
       
       setFilteredPosts(filtered)
+      setCurrentPage(1) // Reset to first page when filters change
     }
   }, [posts, selectedCategory, searchTerm])
+  
+  // Calculate pagination
+  const indexOfLastPost = currentPage * postsPerPage
+  const indexOfFirstPost = indexOfLastPost - postsPerPage
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost)
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage)
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber)
   
   return (
     <div>
@@ -86,7 +98,7 @@ const PostListPage = () => {
       ) : (
         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPosts.map(post => (
+            {currentPosts.map(post => (
               <PostCard key={post.id} post={post} />
             ))}
           </div>
@@ -105,6 +117,45 @@ const PostListPage = () => {
                   Clear filters
                 </button>
               ) : null}
+            </div>
+          )}
+          
+          {/* Pagination */}
+          {filteredPosts.length > 0 && totalPages > 1 && (
+            <div className="flex justify-center mt-8">
+              <nav className="flex items-center">
+                <button
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md mr-2 bg-gray-200 text-gray-700 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex space-x-1">
+                  {[...Array(totalPages).keys()].map(number => (
+                    <button
+                      key={number + 1}
+                      onClick={() => paginate(number + 1)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-md ${
+                        currentPage === number + 1
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {number + 1}
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded-md ml-2 bg-gray-200 text-gray-700 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </nav>
             </div>
           )}
         </>
