@@ -3,22 +3,70 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import ReactMarkdown from 'react-markdown'
 import { getPost, addComment, deletePost } from '../services/api'
+import { useToast } from '../context/ToastContext'
 
 const PostDetailPage = () => {
   const { slug } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
   const [comment, setComment] = useState('')
   const isLoggedIn = !!localStorage.getItem('authToken')
+  const userId = parseInt(localStorage.getItem('userId') || '0')
+  const username = localStorage.getItem('username') || 'User'
   
-  const { data: post, isLoading, error } = useQuery(['post', slug], () => getPost(slug))
+  const { data: post, isLoading, error } = useQuery(['post', slug], () => getPost(slug), {
+    onError: (error) => {
+      showToast(`Error loading post: ${error.message}`, 'error')
+    }
+  })
   
   const commentMutation = useMutation(
     (commentText) => addComment(slug, commentText),
     {
+      // Optimistic update
+      onMutate: async (newCommentText) => {
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries(['post', slug])
+        
+        // Snapshot the previous value
+        const previousPost = queryClient.getQueryData(['post', slug])
+        
+        // Optimistically update the cache with the new comment
+        queryClient.setQueryData(['post', slug], old => {
+          // Create an optimistic comment
+          const optimisticComment = {
+            id: 'temp-id-' + Date.now(),
+            text: newCommentText,
+            author: {
+              id: userId,
+              username: username
+            },
+            created_at: new Date().toISOString(),
+            approved: false,
+            isOptimistic: true  // Flag to identify optimistic comments
+          }
+          
+          return {
+            ...old,
+            comments: [...(old.comments || []), optimisticComment]
+          }
+        })
+        
+        // Return a context with the previous value
+        return { previousPost }
+      },
       onSuccess: () => {
-        queryClient.invalidateQueries(['post', slug])
+        showToast('Comment added successfully', 'success')
         setComment('')
+        queryClient.invalidateQueries(['post', slug])
+      },
+      onError: (error, _, context) => {
+        showToast(`Error adding comment: ${error.message}`, 'error')
+        // Rollback to the previous value if there was an error
+        if (context?.previousPost) {
+          queryClient.setQueryData(['post', slug], context.previousPost)
+        }
       }
     }
   )
@@ -27,7 +75,11 @@ const PostDetailPage = () => {
     () => deletePost(slug),
     {
       onSuccess: () => {
+        showToast('Post deleted successfully', 'success')
         navigate('/posts')
+      },
+      onError: (error) => {
+        showToast(`Error deleting post: ${error.message}`, 'error')
       }
     }
   )
@@ -71,7 +123,7 @@ const PostDetailPage = () => {
     day: 'numeric'
   })
   
-  const isAuthor = isLoggedIn && post.author.id === parseInt(localStorage.getItem('userId'))
+  const isAuthor = isLoggedIn && post.author.id === userId
   
   return (
     <div>
@@ -106,8 +158,9 @@ const PostDetailPage = () => {
                 }
               }}
               className="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200"
+              disabled={deleteMutation.isLoading}
             >
-              Delete
+              {deleteMutation.isLoading ? 'Deleting...' : 'Delete'}
             </button>
           </div>
         )}
@@ -150,11 +203,15 @@ const PostDetailPage = () => {
         <div className="space-y-6">
           {post.comments?.length ? (
             post.comments.map(comment => (
-              <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
+              <div 
+                key={comment.id} 
+                className={`${comment.isOptimistic ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'} p-4 rounded-lg transition-all`}
+              >
                 <div className="flex justify-between mb-2">
                   <div className="font-medium">{comment.author.username}</div>
                   <div className="text-gray-500 text-sm">
                     {new Date(comment.created_at).toLocaleDateString()}
+                    {comment.isOptimistic && <span className="ml-2 text-blue-500">(Sending...)</span>}
                   </div>
                 </div>
                 <p>{comment.text}</p>
