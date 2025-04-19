@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from 'react-query'
 import { login } from '../services/api'
+import { useToast } from '../context/ToastContext'
 
 const LoginPage = () => {
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -13,14 +15,18 @@ const LoginPage = () => {
   
   const loginMutation = useMutation(login, {
     onSuccess: (data) => {
-      // Store user ID in localStorage
+      // Store user ID and username in localStorage
       if (data.user && data.user.id) {
         localStorage.setItem('userId', data.user.id)
+        localStorage.setItem('username', data.user.username)
       }
+      showToast('Logged in successfully!', 'success')
       navigate('/')
     },
     onError: (error) => {
-      setError(error.response?.data?.detail || 'Login failed. Please check your credentials.')
+      const errorMsg = error.response?.data?.detail || 'Login failed. Please check your credentials.'
+      setError(errorMsg)
+      showToast(errorMsg, 'error')
     }
   })
   
