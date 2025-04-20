@@ -1,5 +1,8 @@
 .App {
   text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .App-logo {
@@ -35,4 +38,68 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.auth-forms {
+  display: flex;
+  gap: 40px;
+  margin-top: 20px;
+}
+
+.form-section {
+  flex: 1;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.error {
+  color: red;
+  font-size: 0.8em;
+  margin-top: 5px;
+}
+
+.error-message {
+  color: red;
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #ccc;
+}
+
+.auth-status {
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
 }
