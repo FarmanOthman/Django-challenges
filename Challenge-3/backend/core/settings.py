@@ -38,8 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',  # Django REST framework
-    'blog',  # Our blog app
+    'rest_framework.authtoken',  # Add token authentication
     'corsheaders',  # Add CORS support
+    'blog',  # Our blog app
 ]
 
 MIDDLEWARE = [
@@ -129,13 +130,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in development
 CORS_ALLOW_CREDENTIALS = True
 
-# REST Framework settings for development
+# REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Allow all access in development
+        'rest_framework.permissions.AllowAny',
     ]
 }
