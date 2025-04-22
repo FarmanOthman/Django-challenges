@@ -1,57 +1,61 @@
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
-  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
   const [error, setError] = useState('');
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const onSubmit = async (data) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError('');
-    const result = await login(data.username, data.password);
+    const result = await login(formData.username, formData.password);
     if (!result.success) {
       setError(result.error);
+    } else {
+      navigate('/home');
     }
   };
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="login-form">
-      <div className="form-group">
-        <label htmlFor="username">Username</label>
+    <form onSubmit={handleSubmit} className="login-form">
+      <h2>Login</h2>
+      {error && <div className="error">{error}</div>}
+      <div>
         <input
-          id="username"
           type="text"
-          {...register('username', { required: 'Username is required' })}
+          name="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={handleChange}
+          required
         />
-        {errors.username && (
-          <span className="error">{errors.username.message}</span>
-        )}
       </div>
-
-      <div className="form-group">
-        <label htmlFor="password">Password</label>
+      <div>
         <input
-          id="password"
           type="password"
-          {...register('password', { required: 'Password is required' })}
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
         />
-        {errors.password && (
-          <span className="error">{errors.password.message}</span>
-        )}
       </div>
-
-      {error && <div className="error-message">{error}</div>}
-      
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Logging in...' : 'Login'}
-      </button>
+      <button type="submit">Login</button>
     </form>
   );
 };
 
-export default LoginForm; 
+export default LoginForm;
