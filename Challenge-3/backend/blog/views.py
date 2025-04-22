@@ -44,30 +44,60 @@ class CommentCreateView(generics.CreateAPIView):
 
 @api_view(['POST'])
 def custom_login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
+    print("Login attempt received")  # Debug print
+    username = request.data.get('username', '').strip()
+    password = request.data.get('password', '').strip()
     
-    if not username or not password:
+    print(f"Received data - username: {username}")  # Debug print
+    
+    if not username:
         return Response({
-            'error': 'Please provide both username and password'
+            'error': 'Username is required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    user = authenticate(username=username, password=password)
-    
-    if user:
-        token, _ = Token.objects.get_or_create(user=user)
+    if not password:
         return Response({
-            'token': token.key,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email
-            }
-        })
-    else:
-        return Response({
-            'error': 'Invalid credentials'
+            'error': 'Password is required'
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        print("Attempting authentication")  # Debug print
+        user = authenticate(username=username, password=password)
+        print(f"Authentication result: {user}")  # Debug print
+        
+        if user is not None:
+            if user.is_active:
+                token, _ = Token.objects.get_or_create(user=user)
+                return Response({
+                    'token': token.key,
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email
+                    }
+                })
+            else:
+                return Response({
+                    'error': 'User account is disabled'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Check if user exists
+            user_exists = User.objects.filter(username=username).exists()
+            print(f"User exists check: {user_exists}")  # Debug print
+            
+            if user_exists:
+                return Response({
+                    'error': 'Incorrect password'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({
+                    'error': 'Username does not exist'
+                }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        print(f"Login error: {str(e)}")  # Debug print
+        return Response({
+            'error': f'An error occurred during login: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def register_user(request):
