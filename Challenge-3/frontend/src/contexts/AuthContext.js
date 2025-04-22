@@ -1,18 +1,18 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import api from '../utils/axios';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in on component mount
     const token = localStorage.getItem('token');
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-      // Verify token and get user data
+      api.defaults.headers.common['Authorization'] = `Token ${token}`;
       checkAuth();
     } else {
       setLoading(false);
@@ -21,12 +21,11 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('/api/auth/user/');
+      const response = await api.get('/auth/user/');
       setUser(response.data);
     } catch (error) {
-      console.error('Auth check error:', error.response?.data || error.message);
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['Authorization'];
     } finally {
       setLoading(false);
     }
@@ -34,65 +33,60 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      console.log('Attempting login with:', { username });
-      const response = await axios.post('/api/auth/login/', {
-        username,
-        password,
+      if (!username || !password) {
+        return { success: false, error: 'Please provide both username and password' };
+      }
+
+      const response = await api.post('/auth/login/', {
+        username: username.trim(),
+        password: password.trim()
       });
-      console.log('Login response:', response.data);
+
       const { token, user: userData } = response.data;
       localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+      api.defaults.headers.common['Authorization'] = `Token ${token}`;
       setUser(userData);
+      navigate('/home');
       return { success: true };
     } catch (error) {
-      console.error('Login error:', error.response?.data || error.message);
-      return {
-        success: false,
-        error: error.response?.data?.detail || error.response?.data?.error || 'Login failed',
-      };
+      const errorMessage = error.response?.data?.error || 'Invalid credentials';
+      return { success: false, error: errorMessage };
     }
   };
 
   const register = async (username, email, password) => {
     try {
-      console.log('Attempting registration with:', { username, email });
-      const response = await axios.post('/api/auth/register/', {
-        username,
-        email,
-        password,
+      if (!username || !email || !password) {
+        return { success: false, error: 'Please provide all required fields' };
+      }
+
+      const response = await api.post('/auth/register/', {
+        username: username.trim(),
+        email: email.trim(),
+        password: password.trim()
       });
-      console.log('Registration response:', response.data);
+
       const { token, user: userData } = response.data;
       localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+      api.defaults.headers.common['Authorization'] = `Token ${token}`;
       setUser(userData);
+      navigate('/home');
       return { success: true };
     } catch (error) {
-      console.error('Registration error:', error.response?.data || error.message);
-      return {
-        success: false,
-        error: error.response?.data?.detail || error.response?.data?.error || 'Registration failed',
-      };
+      const errorMessage = error.response?.data?.error || 'Registration failed';
+      return { success: false, error: errorMessage };
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
+    navigate('/');
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        logout,
-        register,
-        loading,
-      }}
-    >
+    <AuthContext.Provider value={{ user, login, logout, register, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -104,4 +98,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
