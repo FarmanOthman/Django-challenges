@@ -46,8 +46,16 @@ function App() {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             className="flex-1"
+            crossOrigin={undefined}
+            onPointerEnterCapture={() => {}}
+            onPointerLeaveCapture={() => {}}
           />
-          <Button onClick={handleSendMessage}>
+          <Button 
+            onClick={handleSendMessage}
+            placeholder={undefined}
+            onPointerEnterCapture={() => {}}
+            onPointerLeaveCapture={() => {}}
+          >
             Send
           </Button>
         </div>
