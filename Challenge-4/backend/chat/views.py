@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Room, Message
 import json
+from django.db.models import Q
 
 @api_view(['POST'])
 def register_user(request):
@@ -82,9 +83,11 @@ def create_room(request):
 @permission_classes([IsAuthenticated])
 def list_rooms(request):
     # Get public rooms and private rooms where user is a participant
-    public_rooms = Room.objects.filter(privacy='public')
-    private_rooms = Room.objects.filter(privacy='private', participants=request.user)
-    rooms = public_rooms.union(private_rooms)
+    # Using Q objects to combine filters instead of union which causes ORDER BY issues
+    rooms = Room.objects.filter(
+        Q(privacy='public') | 
+        Q(privacy='private', participants=request.user)
+    ).distinct()
     
     return JsonResponse({
         'rooms': [{
